@@ -177,7 +177,6 @@ def wait_until_start(
                 f"RTT {bili_check.delay * 1000:.1f}ms"
             )
         }
-        yield {"message": "倒计时默认使用会员购 Date 时间源。"}
 
     for fmt in (
         "%Y-%m-%dT%H:%M:%S",

@@ -5,7 +5,7 @@ import importlib
 
 import pytest
 
-from util.TimeUtil import BiliTimeCheck, TimeUtil, current_time_ms
+from util.TimeUtil import BiliTimeCheck, TimeSyncSample, TimeUtil, current_time_ms
 
 
 time_util_module = importlib.import_module("util.TimeUtil")
@@ -25,10 +25,21 @@ def test_time_service_now_uses_calibrated_reference_time(monkeypatch):
     assert service.current_time_ms() == 100_250
 
 
-def test_countdown_now_prefers_bili_date_check(monkeypatch):
+@pytest.mark.parametrize(
+    ("ntp_sample", "expected_now", "expected_source"),
+    [
+        (TimeSyncSample("ntp.example", 0.25, 0.02), 100.25, "ntp:ntp.example"),
+        (None, 100.5, "local"),
+    ],
+    ids=["ntp", "local-fallback"],
+)
+def test_countdown_uses_synced_time_source(
+    monkeypatch, ntp_sample, expected_now, expected_source
+):
     monkeypatch.setattr(time_util_module.time, "time", lambda: 100.5)
     service = TimeUtil()
-    service.set_timeoffset("0.25000")
+    monkeypatch.setattr(service, "compute_ntp_sample", lambda: ntp_sample)
+    service.sync_time(check_bili=False)
     service.last_bili_check = BiliTimeCheck(
         offset_center=0.75,
         delay=0.1,
@@ -37,8 +48,8 @@ def test_countdown_now_prefers_bili_date_check(monkeypatch):
         source_url="https://show.bilibili.com/api/ticket/project/listV2",
     )
 
-    assert service.countdown_now() == pytest.approx(99.75)
-    assert service.countdown_time_source() == "bili-date"
+    assert service.countdown_now() == pytest.approx(expected_now)
+    assert service.countdown_time_source() == expected_source
 
 
 def test_compute_ntp_sample_uses_low_delay_median():
