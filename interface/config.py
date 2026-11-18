@@ -9,11 +9,13 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+from app_cmd.config.ConfigBasic import str_to_bool
 from app_cmd.config.NotifierConfig import (
     BarkLevel,
     DEFAULT_BARK_LEVEL,
     DEFAULT_BARK_TEST_LEVEL,
 )
+from util.Constant import DEFAULT_START_DELAY_MS
 from util.h2client.constants import H2CLIENT_CONNECTIONS_PER_SOURCE_IP
 
 from .common import (
@@ -67,6 +69,8 @@ class RuntimeOptions:
     buy_page_url: str = ""
     buy_page_timeout_seconds: int = 60
     buy_page_check_before_seconds: int = 5
+    start_delay_ms: int = DEFAULT_START_DELAY_MS
+    use_local_time: bool = False
     bark_test_level: BarkLevel = DEFAULT_BARK_TEST_LEVEL
     bark_precheck_level: BarkLevel = DEFAULT_BARK_TEST_LEVEL
     bark_success_level: BarkLevel = DEFAULT_BARK_LEVEL
@@ -347,6 +351,8 @@ def build_runtime_options(
     buy_page_url: str = "",
     buy_page_timeout_seconds: int = 60,
     buy_page_check_before_seconds: int = 5,
+    start_delay_ms: int = DEFAULT_START_DELAY_MS,
+    use_local_time: bool = False,
     bark_test_level: BarkLevel = DEFAULT_BARK_TEST_LEVEL,
     bark_precheck_level: BarkLevel = DEFAULT_BARK_TEST_LEVEL,
     bark_success_level: BarkLevel = DEFAULT_BARK_LEVEL,
@@ -416,6 +422,10 @@ def build_runtime_options(
         buy_page_check_before_seconds=normalize_non_negative_interval(
             buy_page_check_before_seconds, default=5
         ),
+        start_delay_ms=normalize_non_negative_interval(
+            start_delay_ms, default=DEFAULT_START_DELAY_MS
+        ),
+        use_local_time=str_to_bool(use_local_time),
         bark_test_level=bark_test_level,
         bark_precheck_level=bark_precheck_level,
         bark_success_level=bark_success_level,
